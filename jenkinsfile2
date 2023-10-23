@@ -127,7 +127,7 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 // change branch name to master before merging
-                git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/Terraformwork.git'
+                git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
             }
         }
         stage('Terraform Init') {
