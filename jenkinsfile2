@@ -170,14 +170,14 @@ pipeline {
             }
         }
 
-        stage('Terraform Plan and Apply') {
+        stage('Terraform Plan') {
             steps {
                 // sh "terraform apply -var-file=environment/${env.ENV_FOLDER}/${env.TERRAFORM_VARS} -var 'is_private=${env.HOSTED_ZONE_TYPE}' -auto-approve"
                 sh "terraform plan -auto-approve"
             }
         }
         
-        stage('Terraform Plan and Apply') {
+        stage('Terraform Apply') {
             steps {
                 // sh "terraform apply -var-file=environment/${env.ENV_FOLDER}/${env.TERRAFORM_VARS} -var 'is_private=${env.HOSTED_ZONE_TYPE}' -auto-approve"
                 sh "terraform apply -auto-approve"
