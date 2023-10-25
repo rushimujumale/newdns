@@ -22,7 +22,7 @@ properties([
                         'return["private_hosted_zone","public_hosted_zone"]'
                 ]
             ]
-        ], 
+        ],
         [$class: 'DynamicReferenceParameter', 
             choiceType: 'ET_FORMATTED_HTML', 
             description: 'These are the details in HTML format', 
@@ -79,84 +79,77 @@ properties([
 pipeline {  
   agent any
   stages {
-      stage('Setup') {
-            steps {
-                script {
-                    echo "${params.modules}"
-                    echo "${params.parameter}"
-                    def input = params.parameter.split(',')
-                    def output = ''
-                    def currentVariable = null
-                    def isParsingArray = false
-                    def arrayValue = []
+      stage('Checkout Code') {
+          steps {
+              git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
+          }
+      }
 
-                    input.each { item ->
-                        if (isParsingArray) {
-                            arrayValue.add(item.trim())
-                            if (item.endsWith("]")) {
-                                isParsingArray = false
-                                output += "${currentVariable} = [${arrayValue.join(', ')}]\n"
-                                currentVariable = null
-                                arrayValue.clear()
-                            }
-                        } else {
-                            if (item.startsWith("[")) {
-                                currentVariable = item.trim()
-                                isParsingArray = true
-                                arrayValue add(currentVariable)
-                                if (item.endsWith("]")) {
-                                    isParsingArray = false
-                                    output += "${currentVariable} = [${arrayValue.join(', ')}]\n"
-                                    currentVariable = null
-                                    arrayValue.clear()
-                                }
-                            } else {
-                                currentVariable = item.trim()
-                                output += "${currentVariable} = \"${item.trim()}\"\n"
-                                currentVariable = null
-                            }
-                        }
-                    }
+      stage('Collect User Input') {
+          steps {
+              script {
+                  def input = params.parameter.split(',')
+                  def output = ''
+                  def currentVariable = null
+                  def isParsingArray = false
+                  def arrayValue = []
 
-                    writeFile file: 'dev.tfvars', text: output
+                  input.each { item ->
+                      if (isParsingArray) {
+                          arrayValue.add(item.trim())
+                          if (item.endsWith("]")) {
+                              isParsingArray = false
+                              output += "${currentVariable} = [${arrayValue.join(', ')}]\n"
+                              currentVariable = null
+                              arrayValue.clear()
+                          }
+                      } else {
+                          if (item.startsWith("[")) {
+                              currentVariable = item.trim()
+                              isParsingArray = true
+                              arrayValue.add(currentVariable)
+                              if (item.endsWith("]")) {
+                                  isParsingArray = false
+                                  output += "${currentVariable} = [${arrayValue.join(', ')}]\n"
+                                  currentVariable = null
+                                  arrayValue.clear()
+                              }
+                          } else {
+                              currentVariable = item.trim()
+                              output += "${currentVariable} = \"${item.trim()}\"\n"
+                              currentVariable = null
+                          }
+                      }
+                  }
 
-                }
-            }
-        }
+                  writeFile file: 'user.tfvars', text: output
+              }
+          }
+      }
 
-        stage('Checkout Code') {
-            steps {
-                // change branch name to master before merging
-                git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
-            }
-        }
-        
+      stage('Terraform Init') {
+          steps {
+              sh 'terraform init'
+          }
+      }
 
-        stage('Terraform Init') {
-            steps {
-                sh 'terraform init'
-            }
-        }
+      stage('Terraform Plan') {
+          steps {
+              sh "terraform plan -var-file=user.tfvars"
+          }
+      }
 
-        stage('Terraform Plan') {
-            steps {
-                // Use the dev.tfvars file for Terraform plan
-                sh "terraform plan -var-file=dev.tfvars"
-            }
-        }
-        
-        stage('Terraform Apply') {
-            steps {
-                // Use the dev.tfvars file for Terraform apply
-                sh "terraform apply -var-file=dev.tfvars"
-            }
-        }
-        stage('Terraform Destroy') {
-            steps {
-                input(id: 'destroy', message: 'Destroy the resources?', ok: 'Destroy')
-                // Use the dev.tfvars file for Terraform destroy
-                sh "terraform destroy -var-file=dev.tfvars"  
-            }
-        }
-    }
+      stage('Terraform Apply') {
+          steps {
+              sh "terraform apply -var-file=user.tfvars"
+          }
+      }
+
+      stage('Terraform Destroy') {
+          steps {
+              input(id: 'destroy', message: 'Destroy the resources?', ok: 'Destroy')
+              sh "terraform destroy -var-file=user.tfvars"  
+          }
+      }
+  }
 }
