@@ -28,6 +28,10 @@ properties([
             description: 'Domain name for public hosted zone', 
             name: 'public_domain_name'
         ],
+        [$class: 'FileParameterDefinition',
+            description: 'Upload a .tfvars file',
+            name: 'tfvars_file'
+        ],
         [$class: 'DynamicReferenceParameter', 
             choiceType: 'ET_FORMATTED_HTML', 
             description: 'These are the details in HTML format', 
@@ -133,11 +137,23 @@ pipeline {
             }
         }
 
+        stage('Upload .tfvars File') {
+            steps {
+                script {
+                    def tfvarsFile = params.tfvars_file
+                    if (tfvarsFile) {
+                        def targetFileName = 'user.tfvars'
+                        tfvarsFile.withInputStream { inputStream ->
+                            writeFile file: targetFileName, text: inputStream.text
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Checkout Code') {
             steps {
-                // Change branch name to main before merging
                 git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
-            }
         }
         
         stage('Terraform Init') {
@@ -148,24 +164,25 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -var-file=dev.tfvars'
+                sh 'terraform plan -var-file=dev.tfvars -var-file=user.tfvars'
             }
         }
 
         stage('Terraform Apply') {
             steps {
-                sh 'terraform apply -var-file=dev.tfvars'
+                sh 'terraform apply -var-file=dev.tfvars -var-file=user.tfvars'
             }
         }
 
         stage('Terraform Destroy') {
             steps {
                 input(id: 'destroy', message: 'Destroy the resources?', ok: 'Destroy')
-                sh 'terraform destroy -var-file=dev.tfvars'
+                sh 'terraform destroy -var-file=dev.tfvars -var-file=user.tfvars'
             }
         }
     }
 }
+
 
 
 
