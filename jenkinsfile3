@@ -44,12 +44,12 @@ properties([
                     script: 
                         ''' service_tier_map = [
                               "private_hosted_zone": [
-                                ["variable_name": "domain_name", "value": "" ],
-                                ["variable_name": "vpc_id", "value": ""],
+                                ["variable_name": "domain_name=", "value": "" ],
+                                ["variable_name": "vpc_id=", "value": ""],
                         
                               ],
                               "public_hosted_zone": [
-                                ["variable_name": "domain_name", "value": "" ]                       
+                                ["variable_name": "domain_name=", "value": "" ]                       
                            ]]
                           html_to_be_rendered = "<table><tr>"
                           service_list = service_tier_map[modules]
