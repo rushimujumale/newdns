@@ -131,69 +131,31 @@ pipeline {
             }
         }
         
+
         stage('Terraform Init') {
             steps {
                 sh 'terraform init'
             }
         }
+
         stage('Terraform Plan') {
             steps {
-                script {
-                    def envFolder = 'environment/${env.ENV_FOLDER}'
-                    def terraformVars = 'your_terraform_vars_file.tfvars'
-                    def hostedZoneType = 'true'  // Replace with your default value
-
-                    // Check if the parameter values exist, and if so, use them
-                    if (params.modules) {
-                        envFolder = "environment/${env.ENV_FOLDER}/${params.modules}/${env.TERRAFORM_VARS}"
-                    }
-                    if (params.parameter) {
-                        hostedZoneType = params.parameter
-                    }
-
-                    sh "terraform plan -var-file=${envFolder}/${terraformVars} -var 'is_private=${hostedZoneType}'"
-                }
+                // sh "terraform apply -var-file=environment/${env.ENV_FOLDER}/${env.TERRAFORM_VARS} -var 'is_private=${env.HOSTED_ZONE_TYPE}' -auto-approve"
+                sh "terraform plan -var-file=dev.tfvars"
             }
         }
-
+        
         stage('Terraform Apply') {
             steps {
-                script {
-                    def envFolder = 'environment/${env.ENV_FOLDER}'
-                    def terraformVars = 'your_terraform_vars_file.tfvars'
-                    def hostedZoneType = 'true'  // Replace with your default value
-
-                    // Check if the parameter values exist, and if so, use them
-                    if (params.modules) {
-                        envFolder = "environment/${env.ENV_FOLDER}/${params.modules}/${env.TERRAFORM_VARS}"
-                    }
-                    if (params.parameter) {
-                        hostedZoneType = params.parameter
-                    }
-
-                    sh "terraform apply -var-file=${envFolder}/${terraformVars} -var 'is_private=${hostedZoneType}' -auto-approve"
-                }
+                // sh "terraform apply -var-file=environment/${env.ENV_FOLDER}/${env.TERRAFORM_VARS} -var 'is_private=${env.HOSTED_ZONE_TYPE}' -auto-approve"
+                sh "terraform apply -var-file=dev.tfvars"
             }
         }
-
         stage('Terraform Destroy') {
             steps {
                 input(id: 'destroy', message: 'Destroy the resources?', ok: 'Destroy')
-                script {
-                    def envFolder = 'environment/${env.ENV_FOLDER}'
-                    def terraformVars = 'your_terraform_vars_file.tfvars'
-                    def hostedZoneType = 'true'  // Replace with your default value
-
-                    // Check if the parameter values exist, and if so, use them
-                    if (params.modules) {
-                        envFolder = "environment/${env.ENV_FOLDER}/${params.modules}/${env.TERRAFORM_VARS}"
-                    }
-                    if (params.parameter) {
-                        hostedZoneType = params.parameter
-                    }
-
-                    sh "terraform destroy -var-file=${envFolder}/${terraformVars} -var 'is_private=${hostedZoneType}' -auto-approve"
-                }
+                // sh "terraform destroy -var-file=environment/${env.ENV_FOLDER}/${env.TERRAFORM_VARS} -var 'is_private=${env.HOSTED_ZONE_TYPE}' -auto-approve"
+                sh "terraform destroy -var-file=dev.tfvars"  
             }
         }
     }
