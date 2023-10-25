@@ -151,30 +151,30 @@ pipeline {
             }
         }
 
-        stage('Checkout Code') {
+        steps('Checkout Code') {
             steps {
                 git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
         }
         
-        stage('Terraform Init') {
+        steps('Terraform Init') {
             steps {
                 sh 'terraform init'
             }
         }
 
-        stage('Terraform Plan') {
+        steps('Terraform Plan') {
             steps {
                 sh 'terraform plan -var-file=dev.tfvars -var-file=user.tfvars'
             }
         }
 
-        stage('Terraform Apply') {
+        steps('Terraform Apply') {
             steps {
                 sh 'terraform apply -var-file=dev.tfvars -var-file=user.tfvars'
             }
         }
 
-        stage('Terraform Destroy') {
+        steps('Terraform Destroy') {
             steps {
                 input(id: 'destroy', message: 'Destroy the resources?', ok: 'Destroy')
                 sh 'terraform destroy -var-file=dev.tfvars -var-file=user.tfvars'
