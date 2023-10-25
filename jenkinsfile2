@@ -1,7 +1,7 @@
 properties([
     parameters([
         [$class: 'ChoiceParameter', 
-            choiceType: 'PT_SINGLE_SELECT', 
+            choiceType: 'PT_SINGLE_SELECT',
             description: 'Select the Modules Name from the Dropdown List', 
             filterLength: 1, 
             filterable: true, 
@@ -130,39 +130,7 @@ pipeline {
                 git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
             }
         }
-        // stage('Terraform Init') {
-        //     steps {
-        //         withCredentials(awsCredentials) {
-        //         sh 'terraform fmt'
-        //         sh 'terraform init'
-        //         }
-        //     }
-        // }
-        // stage('Terraform Plan') {
-        //     environment {
-        //         TF_VAR_public_key = "${params.public_key}"
-        //         }
-        //     steps {
-        //        withCredentials(awsCredentials) {
-        //            sh "terraform plan -target=module.\"${params.modules}\" -var-file=\"UC.tfvars\" -out=terraform.plan"
-        //         }
-        //     }
-        // }
-
-        // stage('Terraform Apply') {
-        //     steps {
-        //         withCredentials(awsCredentials) {
-        //             sh 'terraform apply -auto-approve terraform.plan'
-        //         }
-        //     }
-        // }
-        // stage('Terraform Destroy') {
-        //     steps {
-        //         withCredentials(awsCredentials) {
-        //             sh 'terraform destroy -auto-approve'
-        //         }
-        //     }
-        // }
+        
 
         stage('Terraform Init') {
             steps {
