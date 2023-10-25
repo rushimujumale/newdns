@@ -22,16 +22,7 @@ properties([
                         'return["private_hosted_zone","public_hosted_zone"]'
                 ]
             ]
-        ],
-        [$class: 'StringParameterDefinition', 
-            defaultValue: '', 
-            description: 'Domain name for public hosted zone', 
-            name: 'public_domain_name'
-        ],
-        [$class: 'FileParameterDefinition',
-            description: 'Upload a .tfvars file',
-            name: 'tfvars_file'
-        ],
+        ], 
         [$class: 'DynamicReferenceParameter', 
             choiceType: 'ET_FORMATTED_HTML', 
             description: 'These are the details in HTML format', 
@@ -86,9 +77,9 @@ properties([
 ])
 
 pipeline {  
-    agent any
-    stages {
-        stage('Setup') {
+  agent any
+  stages {
+      stage('Setup') {
             steps {
                 script {
                     echo "${params.modules}"
@@ -112,7 +103,7 @@ pipeline {
                             if (item.startsWith("[")) {
                                 currentVariable = item.trim()
                                 isParsingArray = true
-                                arrayValue.add(currentVariable)
+                                arrayValue add(currentVariable)
                                 if (item.endsWith("]")) {
                                     isParsingArray = false
                                     output += "${currentVariable} = [${arrayValue.join(', ')}]\n"
@@ -121,69 +112,51 @@ pipeline {
                                 }
                             } else {
                                 currentVariable = item.trim()
-                                if (currentVariable == 'domain_name' && params.modules == 'public_hosted_zone') {
-                                    // Set the domain_name variable based on the user input
-                                    output += "${currentVariable} = \"${params.public_domain_name}\"\n"
-                                } else {
-                                    output += "${currentVariable} = \"${item.trim()}\"\n"
-                                }
+                                output += "${currentVariable} = \"${item.trim()}\"\n"
                                 currentVariable = null
                             }
                         }
                     }
 
                     writeFile file: 'dev.tfvars', text: output
+
                 }
             }
         }
 
-        stage('Upload .tfvars File') {
+        stage('Checkout Code') {
             steps {
-                script {
-                    def tfvarsFile = params.tfvars_file
-                    if (tfvarsFile) {
-                        def targetFileName = 'user.tfvars'
-                        tfvarsFile.withInputStream { inputStream ->
-                            writeFile file: targetFileName, text: inputStream.text
-                        }
-                    }
-                }
-            }
-        }
-
-        steps('Checkout Code') {
-            steps {
+                // change branch name to master before merging
                 git branch: 'main', credentialsId: "d184034c-1779-42a9-9550-37882d4551c4", url: 'https://github.com/rushimujumale/newdns.git'
+            }
         }
         
-        steps('Terraform Init') {
+
+        stage('Terraform Init') {
             steps {
                 sh 'terraform init'
             }
         }
 
-        steps('Terraform Plan') {
+        stage('Terraform Plan') {
             steps {
-                sh 'terraform plan -var-file=dev.tfvars -var-file=user.tfvars'
+                // Use the dev.tfvars file for Terraform plan
+                sh "terraform plan -var-file=dev.tfvars"
             }
         }
-
-        steps('Terraform Apply') {
+        
+        stage('Terraform Apply') {
             steps {
-                sh 'terraform apply -var-file=dev.tfvars -var-file=user.tfvars'
+                // Use the dev.tfvars file for Terraform apply
+                sh "terraform apply -var-file=dev.tfvars"
             }
         }
-
-        steps('Terraform Destroy') {
+        stage('Terraform Destroy') {
             steps {
                 input(id: 'destroy', message: 'Destroy the resources?', ok: 'Destroy')
-                sh 'terraform destroy -var-file=dev.tfvars -var-file=user.tfvars'
+                // Use the dev.tfvars file for Terraform destroy
+                sh "terraform destroy -var-file=dev.tfvars"  
             }
         }
     }
-}
-
-
-
-
 }

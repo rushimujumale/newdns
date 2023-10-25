@@ -49,7 +49,7 @@ properties([
                         
                               ],
                               "public_hosted_zone": [
-                                ["variable_name": "domain_name", "value": "example.com" ]                       
+                                ["variable_name": "domain_name", "value": "" ]                       
                            ]]
                           html_to_be_rendered = "<table><tr>"
                           service_list = service_tier_map[modules]
